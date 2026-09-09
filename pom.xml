@@ -1,46 +1,26 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.xmooncorp</groupId>
-    <artifactId>Magic8Ball</artifactId>
-    <version>UNOFFICIAL</version>
+
+    <groupId>io.github.wickidcow</groupId>
+    <artifactId>SF_Magic8Ball</artifactId>
+    <version>1.0.0</version>
 
     <properties>
-        <java.version>21</java.version>
-        <paper-spigot.version>1.20.6</paper-spigot.version>
-        <maven.compiler.source>${java.version}</maven.compiler.source>
-        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <paper.version>[26.2.build,)</paper.version>
+        <slimefun.groupId>com.github.Slimefun</slimefun.groupId>
+        <slimefun.artifactId>Slimefun4</slimefun.artifactId>
+        <slimefun.version>RC-37</slimefun.version>
     </properties>
-
-    <issueManagement>
-        <!-- Bug Tracker -->
-        <system>GitHub Issues</system>
-        <url>https://github.com/xMoonGames/Magic-8-Ball/issues</url>
-    </issueManagement>
-
-    <licenses>
-        <license>
-            <!-- License -->
-            <name>GNU General Public License v3.0</name>
-            <url>https://github.com/xMoonGames/Magic-8-Ball/blob/master/LICENSE</url>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
 
     <repositories>
         <repository>
             <id>paper-repo</id>
-            <url>https://repo.destroystokyo.com/repository/maven-public/</url>
+            <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
-
-        <repository>
-            <id>spigot-repo</id>
-            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
-        </repository>
-
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
@@ -48,57 +28,55 @@
     </repositories>
 
     <build>
-        <finalName>${project.name} v${project.version}</finalName>
-        <defaultGoal>clean package</defaultGoal>
-        <sourceDirectory>${basedir}/src/main/java</sourceDirectory>
-
-        <plugins>
-            <plugin>
-                <!-- Compiler plugin -->
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.13.0</version>
-                <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
-                    <excludes>
-                        <exclude>**/package-info.java</exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
-        </plugins>
-
+        <finalName>SF_Magic8Ball${project.version}</finalName>
+        <defaultGoal>clean verify</defaultGoal>
         <resources>
             <resource>
-                <directory>${basedir}/src/main/resources</directory>
+                <directory>src/main/resources</directory>
                 <filtering>true</filtering>
-                <includes>
-                    <include>*</include>
-                </includes>
             </resource>
             <resource>
-                <directory>${basedir}</directory>
+                <directory>${project.basedir}</directory>
                 <filtering>false</filtering>
-                <includes>
-                    <include>LICENSE</include>
-                </includes>
+                <includes><include>LICENSE</include></includes>
             </resource>
         </resources>
-
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.15.0</version>
+            </plugin>
+        </plugins>
     </build>
 
     <dependencies>
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>${paper-spigot.version}-R0.1-SNAPSHOT</version>
+            <version>${paper.version}</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
-            <groupId>com.github.Slimefun</groupId>
-            <artifactId>Slimefun4</artifactId>
-            <version>RC-37</version>
+            <groupId>${slimefun.groupId}</groupId>
+            <artifactId>${slimefun.artifactId}</artifactId>
+            <version>${slimefun.version}</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>io.papermc.paper</groupId>
+                    <artifactId>paper-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.spigotmc</groupId>
+                    <artifactId>spigot-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>3.0.2</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

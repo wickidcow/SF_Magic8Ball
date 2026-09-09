@@ -1,24 +1,10 @@
-## CHANGE this to the name of your plugin.
 name: Magic8Ball
-
-## CHANGE this to your username.
-author: xMoonGames
-
-## CHANGE this to a meaningful but short description of your plugin.
-description: The Magic 8 Ball addon brings the classic fortune-telling toy into Minecraft
-
-## CHANGE this to the path of the class that extends JavaPlugin.
+authors: [xMoonGames, wickidcow]
+description: Maintained Magic 8 Ball Slimefun addon for Minecraft 1.21.11+ and modern Paper-family servers.
 main: com.xmooncorp.magic8ball.Magic8Ball
-
-## You can change this to link to your website or repository. You can also remove this line if you want to.
-website: https://github.com/xMoonGames/Magic-8-Ball
-
-## This value is automatically replaced by the version specified in your pom.xml file, do not change this.
+website: https://github.com/wickidcow/SF_Magic8Ball
 version: ${project.version}
-
-## This is the minimum minecraft version required to run your plugin.
-api-version: '1.20'
-
-## This is required and marks Slimefun as a plugin dependency.
+api-version: '1.21'
+folia-supported: true
 depend:
-- Slimefun
+  - Slimefun

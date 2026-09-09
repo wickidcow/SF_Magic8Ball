@@ -1,46 +1,43 @@
-# Magic 8 Ball Addon
+# SF_Magic8Ball
 
-**Ever wondered what the future holds? Shake your Magic 8 Ball and find out!**
+A maintained fork of the Magic 8 Ball Slimefun addon for modern Minecraft servers.
 
-![Magic 8 Ball](images/magic-8-ball.png)
+## Support
 
-## Overview
+- Minecraft 1.21.11+
+- Paper 26.2+ production baseline
+- Purpur, Folia and Leaf compatibility targets
+- Slimefun Legacy is the primary Slimefun target
+- Slimefun United is a required compatibility target
+- Slimefun Gugu and original Slimefun4 are compatibility-tested targets where their APIs remain compatible
 
-The Magic 8 Ball addon brings the classic fortune-telling toy into Minecraft! With this addon, you can shake the Magic 8 Ball and receive answers to your most pressing questions. It's a fun and interactive addition to your Slimefun setup!
+The maintained fork intentionally avoids external Slimefun utility-library dependencies and keeps its source/resources English-only.
 
 ## Features
 
-- **Shake for Answers**: Simply shake the Magic 8 Ball item to get a random answer to your question.
+- Craft a Magic 8 Ball through Slimefun
+- Left-click air or right-click a block to receive a randomized answer
+- Sound and particle feedback for positive, neutral and negative answers
+- Geo resource integration for Magic 8 Ball fragments
 
-## Download
-- To download the addon for the supported Minecraft versions check our [releases page](https://github.com/xMoonGames/Magic-8-Ball/releases) or [blob build](https://blob.build/project/Magic8Ball)
+## Build
 
-## Requirements
+The project is built with Java 25 while targeting Java 21 bytecode. The release JAR follows the maintained-addon naming convention:
 
-- **Minecraft client version**: `1.20.4`
-- **Server**: Paper (recommended) or Spigot for Minecraft version: `1.20.4`
-- **Slimefun4**: Version [RC Build 37](https://blob.build/project/Slimefun4/RC) or [Dev Build 1153](https://blob.build/project/Slimefun4/Dev)
+`SF_Magic8Ball<version>.jar`
 
 ## Installation
 
-1. Download the latest version of the Magic 8 Ball Addon.
-2. Place the downloaded `.jar` file into your server’s `plugins` folder.
-3. Restart the server to load the addon.
-4. Enjoy your new Magic 8 Ball item in Minecraft!
+1. Install a supported Slimefun implementation.
+2. Put the latest `SF_Magic8Ball` JAR in `plugins`.
+3. Restart the server.
 
-## Usage
+## Maintainer
 
-- **Obtaining the Magic 8 Ball**: Use the `/sf give playerName MAGIC_8_BALL 1` command or craft it using the recipe provided in the addon.
-- **Shaking the Magic 8 Ball**: Left-click with the Magic 8 Ball in hand to shake it and receive a response.
-
-## Contributing
-
-Contributions are welcome! If you have ideas for additional features or improvements, please feel free to open an issue or submit a pull request.
+Maintained by `wickidcow` for current Slimefun/Paper-family servers. Original project by xMoonGames.
 
 ## License
 
-This project is licensed under the GPL-3 License. See the [LICENSE](LICENSE) file for details.
-
-## Disclaimer
+GPL-3.0. See `LICENSE`.
 
 *Magic 8 Ball* is a trademark of Mattel, Inc. This addon is not endorsed by or affiliated with Mattel, Inc.

@@ -1,24 +1,170 @@
-name: Java CI
+name: Compatibility CI
 
 on:
   push:
-    branches:
-    - master
+    branches: ['**']
   pull_request:
-    branches:
-    - master
+    branches: ['**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
-  build:
-    if: startsWith(github.event.head_commit.message, '[CI skip]') == false
+  source-policy:
+    name: English-only / dependency policy
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v3.5.3
-    - name: Set up JDK 21
-      uses: actions/setup-java@v3.11.0
-      with:
-        java-version: 21
-        distribution: temurin
-    - name: Build with Maven
-      run: mvn package --file pom.xml
+      - uses: actions/checkout@v6
+      - name: Validate source policy
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re, sys
+          roots = [Path('src'), Path('README.md'), Path('pom.xml')]
+          bad = []
+          for root in roots:
+              paths = [root] if root.is_file() else [p for p in root.rglob('*') if p.is_file()]
+              for path in paths:
+                  text = path.read_text(encoding='utf-8', errors='ignore')
+                  if re.search(r'[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]', text):
+                      bad.append(f'CJK text: {path}')
+                  if re.search(r'guizhan', text, re.I):
+                      bad.append(f'Forbidden dependency reference: {path}')
+          if bad:
+              print('\n'.join(bad))
+              sys.exit(1)
+          PY
+
+  legacy:
+    name: Slimefun Legacy / Paper 26.2+
+    needs: source-policy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - uses: actions/checkout@v6
+        with:
+          repository: wickidcow/Slimefun-Legacy
+          ref: master
+          path: .deps/Slimefun-Legacy
+      - name: Publish Slimefun Legacy locally
+        working-directory: .deps/Slimefun-Legacy
+        run: |
+          chmod +x gradlew
+          ./gradlew publishToMavenLocal -PprojectVersion=MAGIC8BALL-CI-SNAPSHOT --no-daemon
+      - name: Build against Slimefun Legacy
+        run: >-
+          mvn -B clean verify
+          -Dpaper.version='[26.2.build,)'
+          -Dslimefun.groupId='com.github.slimefun'
+          -Dslimefun.artifactId='Slimefun'
+          -Dslimefun.version='MAGIC8BALL-CI-SNAPSHOT'
+      - name: Verify release JAR
+        shell: bash
+        run: |
+          JAR="target/SF_Magic8Ball$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout).jar"
+          test -f "$JAR"
+          unzip -tqq "$JAR"
+          echo "JAR=$JAR" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@v6
+        with:
+          name: SF_Magic8Ball-release-jar
+          path: ${{ env.JAR }}
+          if-no-files-found: error
+
+  portable-api:
+    name: ${{ matrix.name }} compatibility
+    needs: source-policy
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Slimefun Gugu 2026.1
+            group: com.github.SlimefunGuguProject
+            artifact: Slimefun4
+            version: '2026.1'
+          - name: Slimefun4 RC-37
+            group: com.github.Slimefun
+            artifact: Slimefun4
+            version: RC-37
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - name: Build against ${{ matrix.name }}
+        run: >-
+          mvn -B clean verify
+          -Dpaper.version='[26.2.build,)'
+          -Dslimefun.groupId='${{ matrix.group }}'
+          -Dslimefun.artifactId='${{ matrix.artifact }}'
+          -Dslimefun.version='${{ matrix.version }}'
+
+  united:
+    name: Slimefun United compatibility
+    needs: source-policy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - uses: actions/checkout@v6
+        with:
+          repository: Slimefun-United/Slimefun-United
+          path: .deps/Slimefun-United
+      - name: Publish Slimefun United locally
+        working-directory: .deps/Slimefun-United
+        run: mvn -B -DskipTests install
+      - name: Build against Slimefun United
+        run: >-
+          mvn -B clean verify
+          -Dpaper.version='[26.2.build,)'
+          -Dslimefun.groupId='io.github.slimefun_united'
+          -Dslimefun.artifactId='slimefun-united'
+          -Dslimefun.version='4.10-SNAPSHOT'
+
+  release:
+    name: Publish immutable release
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    needs: [source-policy, legacy, united, portable-api]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: actions/download-artifact@v7
+        with:
+          name: SF_Magic8Ball-release-jar
+          path: release
+      - name: Publish versioned GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          VERSION="$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)"
+          TAG="v${VERSION}"
+          JAR="release/SF_Magic8Ball${VERSION}.jar"
+          test -f "$JAR"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "$TAG already exists; keeping the release immutable."
+            exit 0
+          fi
+          gh release create "$TAG" "$JAR" \
+            --target "$GITHUB_SHA" \
+            --title "SF_Magic8Ball ${VERSION}" \
+            --notes "Maintained Minecraft 1.21.11+ build. Slimefun Legacy is the primary target; Slimefun United is validated; Gugu and original Slimefun4 are compatibility-tested. Paper 26.2+ baseline with Purpur, Folia and Leaf compatibility targets. English-only resources and no external Slimefun utility-library dependency."

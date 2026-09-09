@@ -3,7 +3,6 @@ package com.xmooncorp.magic8ball.implementation.items;
 import com.xmooncorp.magic8ball.Magic8Ball;
 import com.xmooncorp.magic8ball.core.ConfigBasedLocalization;
 import com.xmooncorp.magic8ball.utils.LocationUtils;
-import com.xmooncorp.magic8ball.utils.compatibility.VersionedParticle;
 import io.github.thebusybiscuit.slimefun4.api.items.ItemGroup;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
@@ -27,27 +26,24 @@ import org.bukkit.inventory.ItemStack;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Optional;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Magic8BallItem extends SlimefunItem implements Listener {
 
-    private final Random random = new Random(System.currentTimeMillis());
-    ConfigBasedLocalization localization = Magic8Ball.instance().localization();
-
+    private final ConfigBasedLocalization localization = Magic8Ball.instance().localization();
     private final String[] affirmative = localization.getStringList("responses.affirmative").toArray(new String[0]);
     private final String[] noncommittal = localization.getStringList("responses.noncommittal").toArray(new String[0]);
     private final String[] negative = localization.getStringList("responses.negative").toArray(new String[0]);
 
     public Magic8BallItem(ItemGroup itemGroup, SlimefunItemStack item, RecipeType recipeType, ItemStack[] recipe) {
         super(itemGroup, item, recipeType, recipe);
-
         addItemHandler(onPlayerInteractBlock());
     }
 
     @Override
-    public void preRegister(){
+    public void preRegister() {
         Magic8Ball plugin = Magic8Ball.instance();
-        plugin.getServer().getPluginManager().registerEvents(this, Magic8Ball.instance());
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
     public void sendRandom8BallMessage(@Nonnull Player player, @Nullable Block block) {
@@ -55,29 +51,34 @@ public class Magic8BallItem extends SlimefunItem implements Listener {
         String color = "§r";
         Sound sound = Sound.INTENTIONALLY_EMPTY;
         Particle particle = Particle.PORTAL;
+
         switch (randomMessage[0]) {
             case "affirmative" -> {
                 color = "§a";
                 sound = Sound.ENTITY_VILLAGER_YES;
-                particle = VersionedParticle.TOTEM_OF_UNDYING;
+                particle = Particle.TOTEM_OF_UNDYING;
             }
             case "noncommittal" -> {
                 color = "§7";
                 sound = Sound.ENTITY_VILLAGER_TRADE;
-                particle = VersionedParticle.CRIT;
+                particle = Particle.CRIT;
             }
             case "negative" -> {
                 color = "§c";
                 sound = Sound.ENTITY_VILLAGER_NO;
-                particle = VersionedParticle.ENCHANTED_HIT;
+                particle = Particle.ENCHANTED_HIT;
+            }
+            default -> {
             }
         }
+
         sendActionBarMessage(player, color + randomMessage[1]);
         playSoundAtLocation(player.getWorld(), player.getLocation(), sound);
 
-        Location handLocation = LocationUtils.getFrontSide(LocationUtils.getRightSide(player.getEyeLocation(), 0.325).subtract(0, 0.7, 0), 0.6);
+        Location handLocation = LocationUtils.getFrontSide(
+                LocationUtils.getRightSide(player.getEyeLocation(), 0.325).subtract(0, 0.7, 0), 0.6);
         if (block != null) {
-            createParticleAtLocation(block.getWorld(), block.getLocation(), particle);
+            createParticleAtLocation(block.getWorld(), block.getLocation().add(0.5, 0.5, 0.5), particle);
         } else {
             createParticleAtLocation(player.getWorld(), handLocation, particle);
         }
@@ -85,20 +86,12 @@ public class Magic8BallItem extends SlimefunItem implements Listener {
 
     @Nonnull
     private String[] getRandomMessage() {
-        switch (random.nextInt(3)) {
-            case 0 -> {
-                return new String [] {"affirmative", affirmative[random.nextInt(affirmative.length)] };
-            }
-            case 1 -> {
-                return new String [] {"noncommittal", noncommittal[random.nextInt(noncommittal.length)] };
-            }
-            case 2 -> {
-                return new String [] {"negative", negative[random.nextInt(negative.length)] };
-            }
-            default -> {
-                return new String[2];
-            }
-        }
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        return switch (random.nextInt(3)) {
+            case 0 -> new String[] {"affirmative", affirmative[random.nextInt(affirmative.length)]};
+            case 1 -> new String[] {"noncommittal", noncommittal[random.nextInt(noncommittal.length)]};
+            default -> new String[] {"negative", negative[random.nextInt(negative.length)]};
+        };
     }
 
     @SuppressWarnings("deprecation")
@@ -114,20 +107,19 @@ public class Magic8BallItem extends SlimefunItem implements Listener {
         world.playSound(location, sound, 1, 0.65f);
     }
 
-    @SuppressWarnings("unused")
-    @EventHandler()
+    @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
-        if (event.getAction() != Action.LEFT_CLICK_AIR) return;
-        if (event.getHand() != EquipmentSlot.HAND) return;
-        Player player = event.getPlayer();
+        if (event.getAction() != Action.LEFT_CLICK_AIR || event.getHand() != EquipmentSlot.HAND) {
+            return;
+        }
 
         SlimefunItem itemHeld = SlimefunItem.getByItem(event.getItem());
-        if (itemHeld != null && itemHeld.getId().equals(this.getId())) {
-            sendRandom8BallMessage(player, null);
+        if (itemHeld != null && itemHeld.getId().equals(getId())) {
+            sendRandom8BallMessage(event.getPlayer(), null);
         }
     }
 
-    private BlockUseHandler onPlayerInteractBlock () {
+    private BlockUseHandler onPlayerInteractBlock() {
         return playerRightClickEvent -> {
             Player player = playerRightClickEvent.getPlayer();
             Optional<Block> block = playerRightClickEvent.getClickedBlock();

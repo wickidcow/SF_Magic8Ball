@@ -5,10 +5,9 @@ import com.xmooncorp.magic8ball.implementation.Items;
 import com.xmooncorp.magic8ball.implementation.resources.Magic8BallFragmentResource;
 import com.xmooncorp.magic8ball.implementation.setup.ItemSetup;
 import com.xmooncorp.magic8ball.implementation.setup.ResearchSetup;
-import io.github.thebusybiscuit.slimefun4.libraries.dough.config.Config;
-import io.github.thebusybiscuit.slimefun4.libraries.dough.updater.BlobBuildUpdater;
-import org.bukkit.plugin.java.JavaPlugin;
 import io.github.thebusybiscuit.slimefun4.api.SlimefunAddon;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import javax.annotation.Nonnull;
 import java.util.logging.Level;
@@ -17,15 +16,15 @@ public class Magic8Ball extends JavaPlugin implements SlimefunAddon {
 
     private static Magic8Ball instance;
     private ConfigBasedLocalization localization;
-    private Config config;
+    private FileConfiguration config;
 
     @Override
     public void onEnable() {
-
         instance = this;
-        config = new Config(this);
+        saveDefaultConfig();
+        reloadConfig();
+        config = getConfig();
 
-        tryAutoUpdate();
         loadLanguage();
 
         log(localization().getString("console.registering-geo"));
@@ -38,41 +37,30 @@ public class Magic8Ball extends JavaPlugin implements SlimefunAddon {
         loadResearches();
 
         log(localization().getString("console.addon-enabled"));
-
     }
 
     @Override
     public void onDisable() {
-        log(localization().getString("console.addon-disabled"));
+        if (localization != null) {
+            log(localization.getString("console.addon-disabled"));
+        }
         instance = null;
     }
 
     @Override
     public String getBugTrackerURL() {
-        // You can return a link to your Bug Tracker instead of null here
-        return "https://github.com/xMoonGames/Magic-8-Ball/issues";
+        return "https://github.com/wickidcow/SF_Magic8Ball/issues";
     }
 
     @Nonnull
     @Override
     public JavaPlugin getJavaPlugin() {
-        /*
-         * You will need to return a reference to your Plugin here.
-         * If you are using your main class for this, simply return "this".
-         */
         return this;
     }
 
     @Nonnull
-    public static Magic8Ball instance(){
+    public static Magic8Ball instance() {
         return instance;
-    }
-
-    @SuppressWarnings("deprecation")
-    private void tryAutoUpdate() {
-        if (getConfig().getBoolean("options.auto-update") && getDescription().getVersion().startsWith("Dev")) {
-            new BlobBuildUpdater(this, getFile(), "Magic8Ball", "Dev").start();
-        }
     }
 
     public static void log(@Nonnull String message) {
@@ -83,7 +71,7 @@ public class Magic8Ball extends JavaPlugin implements SlimefunAddon {
         try {
             ItemSetup.setup(this);
         } catch (Exception | LinkageError x) {
-            getLogger().log(Level.SEVERE, x, () -> "Error loading Magic8Ball Items");
+            getLogger().log(Level.SEVERE, x, () -> "Error loading Magic8Ball items");
         }
     }
 
@@ -100,16 +88,16 @@ public class Magic8Ball extends JavaPlugin implements SlimefunAddon {
     }
 
     private void loadLanguage() {
-        instance().localization = new ConfigBasedLocalization("en-US", config());
-        log(localization().getString("console.loading-language"));
-        log(localization().getString("console.loaded-language") + " " + localization.getName());
+        localization = new ConfigBasedLocalization("en-US", config());
+        log(localization.getString("console.loading-language"));
+        log(localization.getString("console.loaded-language") + " " + localization.getName());
     }
 
-    public ConfigBasedLocalization localization () {
-        return instance().localization;
+    public ConfigBasedLocalization localization() {
+        return localization;
     }
 
-    public Config config () {
-        return instance().config;
+    public FileConfiguration config() {
+        return config;
     }
 }
