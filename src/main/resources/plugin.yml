@@ -1,6 +1,6 @@
 name: Magic8Ball
 authors: [xMoonGames, wickidcow]
-description: Maintained Magic 8 Ball Slimefun addon for Minecraft 1.21.11+ and modern Paper-family servers.
+description: Maintained Magic 8 Ball addon for Slimefun Legacy on Minecraft 1.21.11+ and modern Paper-family servers.
 main: com.xmooncorp.magic8ball.Magic8Ball
 website: https://github.com/wickidcow/SF_Magic8Ball
 version: ${project.version}
