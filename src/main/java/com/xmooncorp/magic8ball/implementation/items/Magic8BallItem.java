@@ -8,8 +8,8 @@ import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItemStack;
 import io.github.thebusybiscuit.slimefun4.api.recipes.RecipeType;
 import io.github.thebusybiscuit.slimefun4.core.handlers.BlockUseHandler;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
@@ -20,24 +20,46 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Magic8BallItem extends SlimefunItem implements Listener {
 
-    private final ConfigBasedLocalization localization = Magic8Ball.instance().localization();
-    private final String[] affirmative = localization.getStringList("responses.affirmative").toArray(new String[0]);
-    private final String[] noncommittal = localization.getStringList("responses.noncommittal").toArray(new String[0]);
-    private final String[] negative = localization.getStringList("responses.negative").toArray(new String[0]);
+    private static final Response FALLBACK = new Response(
+        "Ask again later", NamedTextColor.GRAY, Sound.ENTITY_VILLAGER_TRADE, Particle.CRIT);
+
+    private final List<ResponseGroup> responseGroups = new ArrayList<>();
+    private final ConcurrentMap<UUID, Long> cooldownUntil = new ConcurrentHashMap<>();
+    private final long cooldownMillis;
 
     public Magic8BallItem(ItemGroup itemGroup, SlimefunItemStack item, RecipeType recipeType, ItemStack[] recipe) {
         super(itemGroup, item, recipeType, recipe);
+        ConfigBasedLocalization localization = Magic8Ball.instance().localization();
+        addGroup(localization, "responses.affirmative", NamedTextColor.GREEN, Sound.ENTITY_VILLAGER_YES, Particle.TOTEM_OF_UNDYING);
+        addGroup(localization, "responses.noncommittal", NamedTextColor.GRAY, Sound.ENTITY_VILLAGER_TRADE, Particle.CRIT);
+        addGroup(localization, "responses.negative", NamedTextColor.RED, Sound.ENTITY_VILLAGER_NO, Particle.ENCHANTED_HIT);
+        cooldownMillis = Math.max(0L, Magic8Ball.instance().config().getLong("options.cooldown-ms", 500L));
         addItemHandler(onPlayerInteractBlock());
+    }
+
+    private void addGroup(ConfigBasedLocalization localization, String path, NamedTextColor color, Sound sound, Particle particle) {
+        String[] values = localization.getStringList(path).stream()
+            .filter(value -> value != null && !value.isBlank())
+            .toArray(String[]::new);
+        if (values.length > 0) {
+            responseGroups.add(new ResponseGroup(values, color, sound, particle));
+        }
     }
 
     @Override
@@ -47,56 +69,46 @@ public class Magic8BallItem extends SlimefunItem implements Listener {
     }
 
     public void sendRandom8BallMessage(@Nonnull Player player, @Nullable Block block) {
-        String[] randomMessage = getRandomMessage();
-        String color = "§r";
-        Sound sound = Sound.INTENTIONALLY_EMPTY;
-        Particle particle = Particle.PORTAL;
-
-        switch (randomMessage[0]) {
-            case "affirmative" -> {
-                color = "§a";
-                sound = Sound.ENTITY_VILLAGER_YES;
-                particle = Particle.TOTEM_OF_UNDYING;
-            }
-            case "noncommittal" -> {
-                color = "§7";
-                sound = Sound.ENTITY_VILLAGER_TRADE;
-                particle = Particle.CRIT;
-            }
-            case "negative" -> {
-                color = "§c";
-                sound = Sound.ENTITY_VILLAGER_NO;
-                particle = Particle.ENCHANTED_HIT;
-            }
-            default -> {
-            }
+        if (!acquireCooldown(player)) {
+            return;
         }
 
-        sendActionBarMessage(player, color + randomMessage[1]);
-        playSoundAtLocation(player.getWorld(), player.getLocation(), sound);
+        Response response = getRandomResponse();
+        player.sendActionBar(Component.text(response.message(), response.color()));
+        playSoundAtLocation(player.getWorld(), player.getLocation(), response.sound());
 
         Location handLocation = LocationUtils.getFrontSide(
-                LocationUtils.getRightSide(player.getEyeLocation(), 0.325).subtract(0, 0.7, 0), 0.6);
+            LocationUtils.getRightSide(player.getEyeLocation(), 0.325).subtract(0, 0.7, 0), 0.6);
         if (block != null) {
-            createParticleAtLocation(block.getWorld(), block.getLocation().add(0.5, 0.5, 0.5), particle);
+            createParticleAtLocation(block.getWorld(), block.getLocation().add(0.5, 0.5, 0.5), response.particle());
         } else {
-            createParticleAtLocation(player.getWorld(), handLocation, particle);
+            createParticleAtLocation(player.getWorld(), handLocation, response.particle());
         }
+    }
+
+    private boolean acquireCooldown(Player player) {
+        if (cooldownMillis <= 0L) {
+            return true;
+        }
+        long now = System.currentTimeMillis();
+        UUID playerId = player.getUniqueId();
+        Long previous = cooldownUntil.get(playerId);
+        if (previous != null && previous > now) {
+            return false;
+        }
+        cooldownUntil.put(playerId, now + cooldownMillis);
+        return true;
     }
 
     @Nonnull
-    private String[] getRandomMessage() {
+    private Response getRandomResponse() {
+        if (responseGroups.isEmpty()) {
+            return FALLBACK;
+        }
         ThreadLocalRandom random = ThreadLocalRandom.current();
-        return switch (random.nextInt(3)) {
-            case 0 -> new String[] {"affirmative", affirmative[random.nextInt(affirmative.length)]};
-            case 1 -> new String[] {"noncommittal", noncommittal[random.nextInt(noncommittal.length)]};
-            default -> new String[] {"negative", negative[random.nextInt(negative.length)]};
-        };
-    }
-
-    @SuppressWarnings("deprecation")
-    private void sendActionBarMessage(@Nonnull Player player, @Nonnull String message) {
-        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacy(message));
+        ResponseGroup group = responseGroups.get(random.nextInt(responseGroups.size()));
+        String message = group.values()[random.nextInt(group.values().length)];
+        return new Response(message, group.color(), group.sound(), group.particle());
     }
 
     private void createParticleAtLocation(@Nonnull World world, @Nonnull Location location, @Nonnull Particle particle) {
@@ -112,18 +124,25 @@ public class Magic8BallItem extends SlimefunItem implements Listener {
         if (event.getAction() != Action.LEFT_CLICK_AIR || event.getHand() != EquipmentSlot.HAND) {
             return;
         }
-
         SlimefunItem itemHeld = SlimefunItem.getByItem(event.getItem());
         if (itemHeld != null && itemHeld.getId().equals(getId())) {
             sendRandom8BallMessage(event.getPlayer(), null);
         }
     }
 
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        cooldownUntil.remove(event.getPlayer().getUniqueId());
+    }
+
     private BlockUseHandler onPlayerInteractBlock() {
-        return playerRightClickEvent -> {
-            Player player = playerRightClickEvent.getPlayer();
-            Optional<Block> block = playerRightClickEvent.getClickedBlock();
+        return event -> {
+            Player player = event.getPlayer();
+            Optional<Block> block = event.getClickedBlock();
             block.ifPresent(value -> sendRandom8BallMessage(player, value));
         };
     }
+
+    private record ResponseGroup(String[] values, NamedTextColor color, Sound sound, Particle particle) {}
+    private record Response(String message, NamedTextColor color, Sound sound, Particle particle) {}
 }

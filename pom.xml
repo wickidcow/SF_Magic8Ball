@@ -1,93 +1,11 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
-    <groupId>io.github.wickidcow</groupId>
-    <artifactId>SF_Magic8Ball</artifactId>
-    <version>1.0.0</version>
-    <name>SF_Magic8Ball</name>
-    <description>Maintained Magic 8 Ball addon for Slimefun Legacy on modern Paper servers.</description>
+    <groupId>io.github.wickidcow</groupId><artifactId>SF_Magic8Ball</artifactId><version>1.0.1</version><name>SF_Magic8Ball</name>
+    <description>Maintained Magic 8 Ball addon preserving classic gameplay with modern Paper interaction handling.</description>
     <url>https://github.com/wickidcow/SF_Magic8Ball</url>
-    <licenses>
-        <license>
-            <name>GNU General Public License v3.0</name>
-            <url>https://github.com/wickidcow/Slimefun-Legacy/blob/master/LICENSE</url>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
-
-    <properties>
-        <maven.compiler.release>21</maven.compiler.release>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <paper.version>[26.2.build,)</paper.version>
-        <slimefun.groupId>com.github.Slimefun</slimefun.groupId>
-        <slimefun.artifactId>Slimefun4</slimefun.artifactId>
-        <slimefun.version>RC-37</slimefun.version>
-    </properties>
-
-    <repositories>
-        <repository>
-            <id>paper-repo</id>
-            <url>https://repo.papermc.io/repository/maven-public/</url>
-        </repository>
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
-    </repositories>
-
-    <build>
-        <finalName>SF_Magic8Ball${project.version}</finalName>
-        <defaultGoal>clean verify</defaultGoal>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-            </resource>
-            <resource>
-                <directory>${project.basedir}</directory>
-                <filtering>false</filtering>
-                <includes><include>LICENSE</include></includes>
-            </resource>
-        </resources>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.15.0</version>
-            </plugin>
-        </plugins>
-    </build>
-
-    <dependencies>
-        <dependency>
-            <groupId>io.papermc.paper</groupId>
-            <artifactId>paper-api</artifactId>
-            <version>${paper.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>${slimefun.groupId}</groupId>
-            <artifactId>${slimefun.artifactId}</artifactId>
-            <version>${slimefun.version}</version>
-            <scope>provided</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>io.papermc.paper</groupId>
-                    <artifactId>paper-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.spigotmc</groupId>
-                    <artifactId>spigot-api</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-            <version>3.0.2</version>
-            <scope>provided</scope>
-        </dependency>
-    </dependencies>
+    <licenses><license><name>GNU General Public License v3.0</name><url>https://github.com/wickidcow/Slimefun-Legacy/blob/master/LICENSE</url><distribution>repo</distribution></license></licenses>
+    <properties><maven.compiler.release>21</maven.compiler.release><project.build.sourceEncoding>UTF-8</project.build.sourceEncoding><paper.version>[26.2.build,)</paper.version><slimefun.groupId>com.github.Slimefun</slimefun.groupId><slimefun.artifactId>Slimefun4</slimefun.artifactId><slimefun.version>RC-37</slimefun.version></properties>
+    <repositories><repository><id>paper-repo</id><url>https://repo.papermc.io/repository/maven-public/</url></repository><repository><id>jitpack.io</id><url>https://jitpack.io</url></repository></repositories>
+    <build><finalName>SF_Magic8Ball${project.version}</finalName><defaultGoal>clean verify</defaultGoal><resources><resource><directory>src/main/resources</directory><filtering>true</filtering></resource><resource><directory>${project.basedir}</directory><filtering>false</filtering><includes><include>LICENSE</include></includes></resource></resources><plugins><plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><version>3.15.0</version></plugin></plugins></build>
+    <dependencies><dependency><groupId>io.papermc.paper</groupId><artifactId>paper-api</artifactId><version>${paper.version}</version><scope>provided</scope></dependency><dependency><groupId>${slimefun.groupId}</groupId><artifactId>${slimefun.artifactId}</artifactId><version>${slimefun.version}</version><scope>provided</scope><exclusions><exclusion><groupId>io.papermc.paper</groupId><artifactId>paper-api</artifactId></exclusion><exclusion><groupId>org.spigotmc</groupId><artifactId>spigot-api</artifactId></exclusion></exclusions></dependency><dependency><groupId>com.google.code.findbugs</groupId><artifactId>jsr305</artifactId><version>3.0.2</version><scope>provided</scope></dependency></dependencies>
 </project>

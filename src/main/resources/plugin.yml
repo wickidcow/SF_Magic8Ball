@@ -1,10 +1,9 @@
 name: Magic8Ball
-authors: [xMoonGames, wickidcow]
-description: Maintained Magic 8 Ball addon for Slimefun Legacy on Minecraft 1.21.11+ and modern Paper-family servers.
-main: com.xmooncorp.magic8ball.Magic8Ball
-website: https://github.com/wickidcow/SF_Magic8Ball
 version: ${project.version}
+authors: [xMoonCorp, wickidcow]
+description: Preserved Magic 8 Ball gameplay with modern Paper/Adventure handling for Slimefun Legacy on 1.21.11+.
+website: https://github.com/wickidcow/SF_Magic8Ball
+main: com.xmooncorp.magic8ball.Magic8Ball
+depend: [Slimefun]
 api-version: '1.21'
 folia-supported: true
-depend:
-  - Slimefun

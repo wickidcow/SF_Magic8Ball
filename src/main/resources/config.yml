@@ -1,5 +1,8 @@
 options:
   lang: en-US
+  # Prevents accidental rapid-fire use while keeping the classic instant response feel.
+  # Set to 0 to disable.
+  cooldown-ms: 500
 
 languages:
   en-US:
