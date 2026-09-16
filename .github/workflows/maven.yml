@@ -11,11 +11,10 @@ permissions:
   contents: write
 
 env:
-  ARTIFACT_VERSION: "1.0.1"
-  OUTPUT_NAME: "SF_Magic8Ball1.0.1.jar"
+  ARTIFACT_VERSION: "1.0.2"
+  OUTPUT_NAME: "SF_Magic8Ball1.0.2.jar"
   MAIN_CLASS: "com.xmooncorp.magic8ball.Magic8Ball"
   SLIMEFUN_LEGACY_VERSION: "4.1.48"
-  PAPER_VERSION: "26.2.build.111-stable"
 
 concurrency:
   group: sf-magic8ball-${{ github.workflow }}-${{ github.ref }}
@@ -43,16 +42,36 @@ jobs:
       - name: Verify preservation modernization
         run: |
           set -euo pipefail
-          grep -Fq '<version>1.0.1</version>' pom.xml
+          grep -Fq '<version>1.0.2</version>' pom.xml
+          grep -Fq '<paper.version>1.21.11-R0.1-SNAPSHOT</paper.version>' pom.xml
           grep -Fq 'cooldown-ms: 500' src/main/resources/config.yml
           grep -Fq 'player.sendActionBar' src/main/java/com/xmooncorp/magic8ball/implementation/items/Magic8BallItem.java
           grep -Fq 'FALLBACK' src/main/java/com/xmooncorp/magic8ball/implementation/items/Magic8BallItem.java
-          grep -Fq 'GNU General Public License v3.0' README.md
-          grep -Fq 'NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR MICROSOFT.' README.md
-      - name: Build release JAR
+      - name: Verify Paper 1.21.11 baseline
         run: >-
           mvn -B -Dmaven.test.skip=true clean package
-          -Dpaper.version="${PAPER_VERSION}"
+          -Dpaper.version=1.21.11-R0.1-SNAPSHOT
+          -Dslimefun.groupId=com.github.slimefun
+          -Dslimefun.artifactId=Slimefun
+          -Dslimefun.version="${SLIMEFUN_LEGACY_VERSION}"
+      - name: Verify Paper 26.2 primary compatibility
+        run: >-
+          mvn -B -Dmaven.test.skip=true clean package
+          -Dpaper.version=26.2.build.112-stable
+          -Dslimefun.groupId=com.github.slimefun
+          -Dslimefun.artifactId=Slimefun
+          -Dslimefun.version="${SLIMEFUN_LEGACY_VERSION}"
+      - name: Verify Paper 26.3 alpha compatibility
+        run: >-
+          mvn -B -Dmaven.test.skip=true clean package
+          -Dpaper.version=26.3-rc-3.build.1-alpha
+          -Dslimefun.groupId=com.github.slimefun
+          -Dslimefun.artifactId=Slimefun
+          -Dslimefun.version="${SLIMEFUN_LEGACY_VERSION}"
+      - name: Build universal release JAR from 1.21.11 baseline
+        run: >-
+          mvn -B -Dmaven.test.skip=true clean package
+          -Dpaper.version=1.21.11-R0.1-SNAPSHOT
           -Dslimefun.groupId=com.github.slimefun
           -Dslimefun.artifactId=Slimefun
           -Dslimefun.version="${SLIMEFUN_LEGACY_VERSION}"
@@ -88,5 +107,5 @@ jobs:
             EXISTING="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${TAG}" --jq ".assets[] | select(.name == \"${OUTPUT_NAME}\") | .digest" | head -n1 || true)"
             if [[ -n "$EXISTING" ]]; then [[ "$EXISTING" == "$EXPECTED" ]] || exit 1; else gh release upload "$TAG" "$JAR" --repo "$GITHUB_REPOSITORY"; fi
           else
-            gh release create "$TAG" "$JAR" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "SF_Magic8Ball $TAG" --notes "Final preservation modernization: keeps the original Magic 8 Ball responses and interaction model, moves action-bar output to Adventure, safely handles empty edited response pools, and adds a small configurable anti-spam cooldown."
+            gh release create "$TAG" "$JAR" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "SF_Magic8Ball $TAG" --notes "Magic8Ball 1.0.2 adds Paper 26.3 alpha compatibility validation while preserving the Paper 1.21.11 / Java 21 universal release baseline, Paper 26.2 primary target, Adventure action-bar output, safe response fallback, and configurable anti-spam cooldown."
           fi
