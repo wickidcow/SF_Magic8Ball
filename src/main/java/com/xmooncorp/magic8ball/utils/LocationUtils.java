@@ -40,7 +40,7 @@ public class LocationUtils {
      */
 
     public static Location getRightSide(@Nonnull Location location, double distance) {
-        float angle = location.getYaw() / 60;
+        double angle = Math.toRadians(location.getYaw());
         return location.clone().subtract(new Vector(Math.cos(angle), 0, Math.sin(angle)).normalize().multiply(distance));
     }
 
@@ -54,7 +54,7 @@ public class LocationUtils {
      */
 
     public static Location getLeftSide(@Nonnull Location location, double distance) {
-        float angle = location.getYaw() / 60;
+        double angle = Math.toRadians(location.getYaw());
         return location.clone().add(new Vector(Math.cos(angle), 0, Math.sin(angle)).normalize().multiply(distance));
     }
 }
