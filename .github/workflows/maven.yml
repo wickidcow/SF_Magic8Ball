@@ -64,32 +64,57 @@ jobs:
           grep -Fq 'FALLBACK' src/main/java/com/xmooncorp/magic8ball/implementation/items/Magic8BallItem.java
       - name: Verify Paper 1.21.11 baseline
         run: >-
-          mvn -B -Dmaven.test.skip=true clean package
+          mvn -B clean package
           -Dpaper.version=1.21.11-R0.1-SNAPSHOT
           -Dslimefun.groupId=com.github.slimefun
           -Dslimefun.artifactId=Slimefun
           -Dslimefun.version="${SLIMEFUN_LEGACY_VERSION}"
-      - name: Verify Paper 26.2 primary compatibility
+      - name: Retain 1.21.11-baseline regression evidence
+        run: |
+          mkdir -p .ci-reports/1.21.11-baseline
+          cp target/surefire-reports/TEST-*.xml .ci-reports/1.21.11-baseline/
+      - name: Verify Paper 26.2 compatibility
         run: >-
-          mvn -B -Dmaven.test.skip=true clean package
+          mvn -B clean package
           -Dpaper.version=26.2.build.112-stable
           -Dslimefun.groupId=com.github.slimefun
           -Dslimefun.artifactId=Slimefun
           -Dslimefun.version="${SLIMEFUN_LEGACY_VERSION}"
-      - name: Verify Paper 26.3 alpha compatibility
+      - name: Retain 26.2 regression evidence
+        run: |
+          mkdir -p .ci-reports/26.2
+          cp target/surefire-reports/TEST-*.xml .ci-reports/26.2/
+      - name: Verify stable Paper 26.3 primary API compatibility
         run: >-
-          mvn -B -Dmaven.test.skip=true clean package
-          -Dpaper.version=26.3-rc-3.build.1-alpha
+          mvn -B clean package
+          -Dpaper.version=26.3.build.230-stable
           -Dslimefun.groupId=com.github.slimefun
           -Dslimefun.artifactId=Slimefun
           -Dslimefun.version="${SLIMEFUN_LEGACY_VERSION}"
+      - name: Retain 26.3 regression evidence
+        run: |
+          mkdir -p .ci-reports/26.3
+          cp target/surefire-reports/TEST-*.xml .ci-reports/26.3/
       - name: Build universal release JAR from 1.21.11 baseline
         run: >-
-          mvn -B -Dmaven.test.skip=true clean package
+          mvn -B clean package
           -Dpaper.version=1.21.11-R0.1-SNAPSHOT
           -Dslimefun.groupId=com.github.slimefun
           -Dslimefun.artifactId=Slimefun
           -Dslimefun.version="${SLIMEFUN_LEGACY_VERSION}"
+      - name: Retain baseline package regression evidence
+        run: |
+          mkdir -p .ci-reports/1.21.11-package
+          cp target/surefire-reports/TEST-*.xml .ci-reports/1.21.11-package/
+      - name: Upload Java regression evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: location-regression-reports
+          path: |
+            .ci-reports/
+            target/surefire-reports/
+          if-no-files-found: error
       - name: Validate JAR
         run: |
           set -euo pipefail
