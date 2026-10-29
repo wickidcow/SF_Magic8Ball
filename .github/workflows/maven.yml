@@ -71,8 +71,8 @@ jobs:
           -Dslimefun.version="${SLIMEFUN_LEGACY_VERSION}"
       - name: Retain 1.21.11-baseline regression evidence
         run: |
-          mkdir -p .ci-reports/1.21.11-baseline
-          cp target/surefire-reports/TEST-*.xml .ci-reports/1.21.11-baseline/
+          mkdir -p ci-reports/1.21.11-baseline
+          cp target/surefire-reports/TEST-*.xml ci-reports/1.21.11-baseline/
       - name: Verify Paper 26.2 compatibility
         run: >-
           mvn -B clean package
@@ -82,8 +82,8 @@ jobs:
           -Dslimefun.version="${SLIMEFUN_LEGACY_VERSION}"
       - name: Retain 26.2 regression evidence
         run: |
-          mkdir -p .ci-reports/26.2
-          cp target/surefire-reports/TEST-*.xml .ci-reports/26.2/
+          mkdir -p ci-reports/26.2
+          cp target/surefire-reports/TEST-*.xml ci-reports/26.2/
       - name: Verify stable Paper 26.3 primary API compatibility
         run: >-
           mvn -B clean package
@@ -93,8 +93,8 @@ jobs:
           -Dslimefun.version="${SLIMEFUN_LEGACY_VERSION}"
       - name: Retain 26.3 regression evidence
         run: |
-          mkdir -p .ci-reports/26.3
-          cp target/surefire-reports/TEST-*.xml .ci-reports/26.3/
+          mkdir -p ci-reports/26.3
+          cp target/surefire-reports/TEST-*.xml ci-reports/26.3/
       - name: Build universal release JAR from 1.21.11 baseline
         run: >-
           mvn -B clean package
@@ -104,15 +104,15 @@ jobs:
           -Dslimefun.version="${SLIMEFUN_LEGACY_VERSION}"
       - name: Retain baseline package regression evidence
         run: |
-          mkdir -p .ci-reports/1.21.11-package
-          cp target/surefire-reports/TEST-*.xml .ci-reports/1.21.11-package/
+          mkdir -p ci-reports/1.21.11-package
+          cp target/surefire-reports/TEST-*.xml ci-reports/1.21.11-package/
       - name: Upload Java regression evidence
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: location-regression-reports
           path: |
-            .ci-reports/
+            ci-reports/
             target/surefire-reports/
           if-no-files-found: error
       - name: Validate JAR
